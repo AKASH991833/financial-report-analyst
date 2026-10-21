@@ -7,7 +7,7 @@ let RAW=[], TX=[], VIEW=[], charts={}, page=0, PAGE=15, mapping={};
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function sampleRows(){
   const rnd=mulberry32(42), rows=[['date','description','category','amount']];
-  const cats={income:[['Sales — retail',3800,5200],['Sales — online',1500,2600],['Consulting',800,2200]],
+  const cats={income:[['Sales - retail',3800,5200],['Sales - online',1500,2600],['Consulting',800,2200]],
     expense:[['Rent',1450,1450],['Salaries',2900,3100],['Inventory',900,2100],['Marketing',250,700],['Utilities',180,320],['Software',90,160]]};
   const now=new Date();
   for(let m=11;m>=0;m--){
@@ -29,8 +29,8 @@ function sampleRows(){
       }});
   }
   // two anomalies
-  rows.push([fmtDate(new Date(now.getFullYear(),now.getMonth()-3,14)),'Equipment repair — urgent','Maintenance',-4800]);
-  rows.push([fmtDate(new Date(now.getFullYear(),now.getMonth()-1,9)),'Bulk order — corporate client','Sales',9400]);
+  rows.push([fmtDate(new Date(now.getFullYear(),now.getMonth()-3,14)),'Equipment repair - urgent','Maintenance',-4800]);
+  rows.push([fmtDate(new Date(now.getFullYear(),now.getMonth()-1,9)),'Bulk order - corporate client','Sales',9400]);
   return rows;
 }
 function fmtDate(d){return d.toISOString().slice(0,10);}
@@ -133,6 +133,13 @@ function monthKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 function monthLabel(k){const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleString('en-US',{month:'short',year:'2-digit'});}
 
 function currentFilters(){return {period:document.getElementById('fltPeriod').value,cat:document.getElementById('fltCategory').value,q:document.getElementById('fltSearch').value.trim().toLowerCase()};}
+function buildDashboard(){
+  const cats=[...new Set(TX.map(t=>t.cat))].sort((a,b)=>a.localeCompare(b));
+  document.getElementById('fltCategory').innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+  applyFilters();
+  document.getElementById('dashboard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function applyFilters(){
   const f=currentFilters();let arr=TX.slice();
   if(f.period!=='all'&&TX.length){
@@ -172,7 +179,7 @@ function render(){
     {label:'Revenue',value:fmtMoney(inc),delta:months.length?months.length+' months':'',cls:'var(--ok)'},
     {label:'Expenses',value:fmtMoney(exp),delta:'',cls:'var(--bad)'},
     {label:'Net profit',value:fmtMoney(net),delta:mom!=null?((mom>=0?'+':'')+(mom*100).toFixed(1)+'% vs prev month'):'',cls:net>=0?'var(--ok)':'var(--bad)'},
-    {label:'Profit margin',value:(margin*100).toFixed(1)+'%',delta:'avg net/mo '+fmtMoney(avgNet),cls:'var(--accent)'}
+    {label:'Avg monthly net',value:fmtMoney(avgNet),delta:'margin '+(margin*100).toFixed(1)+'%',cls:'var(--accent)'}
   ];
   document.getElementById('kpis').innerHTML=kpis.map(k=>`<div class="card stat rise"><div class="stat-label">${k.label}</div><div class="stat-value" style="color:${k.cls}">${k.value}</div>${k.delta?`<div class="stat-delta muted">${k.delta}</div>`:''}</div>`).join('');
 
