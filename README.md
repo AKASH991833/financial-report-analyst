@@ -45,3 +45,7 @@ python3 -m http.server 8080
 python3 -m http.server 8051 &
 NODE_PATH=../node_modules node tests/run.mjs
 ```
+
+## Python version (pandas + pdfplumber + Streamlit)
+
+A pro-grade rebuild with real PDF statement parsing and subscription detection lives in [`python-app/`](python-app/) - see its README for run steps. The browser demo above stays the zero-install option.
