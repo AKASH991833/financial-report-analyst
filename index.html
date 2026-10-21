@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Financial Report Analyst - P&L & CSV to insights, in your browser</title>
+<meta name="description" content="Upload a P&L, bank export or any CSV/Excel and get totals, trends, charts, anomalies and plain-language financial insights. Free, private, no sign-up.">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="brand-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span>Financial Report Analyst</span></a>
+    <nav class="site-nav" id="nav">
+      <a class="nav-link" href="#upload">Upload</a>
+      <a class="nav-link" href="#dashboard">Dashboard</a>
+      <a class="nav-link" href="#insights">Insights</a>
+      <a class="nav-link" href="#scenarios">What-if</a>
+    </nav>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" data-theme-toggle aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+      <button class="btn btn-ghost btn-icon menu-btn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero wrap rise" id="upload">
+    <span class="hero-eyebrow">100% private · no sign-up · free</span>
+    <h1>Turn raw exports into a financial report worth reading</h1>
+    <p class="lede">Drop in a P&amp;L, bank statement export or any CSV/Excel with amounts. You get KPIs, monthly trends, category breakdowns, anomaly flags and plain-language insights - everything runs on your device. Nothing is uploaded anywhere.</p>
+    <div class="row row-wrap mt16">
+      <button class="btn btn-primary btn-lg" id="btnSample">Try the sample business</button>
+      <label class="btn btn-ghost btn-lg" for="fileInput">Upload CSV / Excel</label>
+    </div>
+  </section>
+
+  <section class="wrap rise rise-1">
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload a CSV or Excel file">
+      <div class="dz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 4 4m-4-4L8 8"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+      <h3 class="mt0 mb8">Drop your file here</h3>
+      <p class="mb0">CSV, TSV or Excel (.xlsx, .xls) · works best with columns like <code>date</code>, <code>description</code>, <code>category</code>, <code>amount</code> (or <code>debit</code>/<code>credit</code>)</p>
+      <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+    </div>
+    <div id="mappingCard" class="card mt16 hidden">
+      <div class="card-title">Match your columns</div>
+      <div class="card-sub">We guessed these - fix anything that looks wrong, then build the report.</div>
+      <div class="grid grid-4">
+        <div class="field"><label class="lbl" for="mapDate">Date</label><select class="input" id="mapDate"></select></div>
+        <div class="field"><label class="lbl" for="mapDesc">Description</label><select class="input" id="mapDesc"></select></div>
+        <div class="field"><label class="lbl" for="mapCat">Category (optional)</label><select class="input" id="mapCat"></select></div>
+        <div class="field"><label class="lbl" for="mapAmount">Amount</label><select class="input" id="mapAmount"></select></div>
+      </div>
+      <div class="row row-wrap">
+        <label class="row" style="gap:8px"><span class="switch"><input type="checkbox" id="mapSigned"><span class="track"></span></span><span class="small">Amount is signed (negative = expense)</span></label>
+        <div class="grow"></div>
+        <button class="btn btn-primary" id="btnBuild">Build report</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap mt24 hidden" id="dashboard">
+    <div class="row row-wrap spread mb16">
+      <div>
+        <h2 class="mb0" id="reportTitle">Report</h2>
+        <small id="reportMeta"></small>
+      </div>
+      <div class="row row-wrap">
+        <select class="input" id="fltPeriod" style="width:auto">
+          <option value="all">All time</option><option value="3m">Last 3 months</option><option value="6m">Last 6 months</option><option value="12m">Last 12 months</option>
+        </select>
+        <select class="input" id="fltCategory" style="width:auto"><option value="">All categories</option></select>
+        <input class="input" id="fltSearch" placeholder="Search description…" style="width:180px">
+        <button class="btn btn-ghost" id="btnReset">New file</button>
+      </div>
+    </div>
+
+    <div class="grid grid-4 mb16" id="kpis"></div>
+
+    <div class="grid grid-2 mb16">
+      <div class="card"><div class="card-title">Monthly revenue vs expenses</div><div class="card-sub">Bars per month, net profit as a line</div><div style="height:280px"><canvas id="chMonthly"></canvas></div></div>
+      <div class="card"><div class="card-title">Where the money went</div><div class="card-sub">Expense share by category</div><div style="height:280px"><canvas id="chCat"></canvas></div></div>
+    </div>
+    <div class="grid grid-2 mb16">
+      <div class="card"><div class="card-title">Cumulative net cash</div><div class="card-sub">Running total of profit over time</div><div style="height:260px"><canvas id="chCum"></canvas></div></div>
+      <div class="card"><div class="card-title">Top categories</div><div class="card-sub">Income and expense leaders</div><div class="tbl-wrap" style="border:none"><table class="tbl" id="tblTop"></table></div></div>
+    </div>
+
+    <div class="grid grid-2 mb16" id="insights">
+      <div class="card card-pad-lg">
+        <div class="card-title"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.5 1 2.5h6c0-1 .3-1.9 1-2.5A6 6 0 0 0 12 3Z"/></svg></span>What the numbers say</div>
+        <div class="card-sub">Rule-based reading of your data - honest, not AI magic</div>
+        <div id="insightList" class="stack"></div>
+      </div>
+      <div class="card card-pad-lg">
+        <div class="card-title"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>Unusual transactions</div>
+        <div class="card-sub">Statistically out-of-pattern amounts (z-score &gt; 2.5 within their category)</div>
+        <div id="anomalyList" class="stack"></div>
+      </div>
+    </div>
+
+    <div class="card card-pad-lg mb16" id="scenarios">
+      <div class="card-title"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg></span>What-if planner</div>
+      <div class="card-sub">Project the next months if you grow revenue or cut costs. Based on your average month.</div>
+      <div class="grid grid-3 mb16">
+        <div class="field"><label class="lbl">Revenue change <b id="lblRev">+0%</b></label><input type="range" class="range" id="scRev" min="-50" max="100" value="0"></div>
+        <div class="field"><label class="lbl">Expense change <b id="lblExp">+0%</b></label><input type="range" class="range" id="scExp" min="-50" max="50" value="0"></div>
+        <div class="field"><label class="lbl">Months ahead <b id="lblMo">6</b></label><input type="range" class="range" id="scMo" min="3" max="24" value="6"></div>
+      </div>
+      <div class="row row-wrap mb16" id="scSummary"></div>
+      <div style="height:260px"><canvas id="chSc"></canvas></div>
+    </div>
+
+    <div class="card mb16">
+      <div class="row row-wrap spread">
+        <div><div class="card-title">Transactions</div><div class="card-sub mb0" id="txCount"></div></div>
+        <div class="row"><button class="btn btn-ghost btn-sm" id="btnCSV">Export filtered CSV</button><button class="btn btn-ghost btn-sm" id="btnReport">Download report (Markdown)</button><button class="btn btn-ghost btn-sm" id="btnPrint">Print / PDF</button></div>
+      </div>
+      <div class="tbl-wrap mt16" style="border:none"><table class="tbl" id="tblTx"></table></div>
+      <div class="row spread mt16"><small id="pgInfo"></small><div class="row"><button class="btn btn-ghost btn-sm" id="pgPrev">Prev</button><button class="btn btn-ghost btn-sm" id="pgNext">Next</button></div></div>
+    </div>
+
+    <div class="limit-box"><b>Honest limits:</b> insights are rule-based readings of the file you provide (trend, concentration, outlier statistics) - they are not audited financial advice. Date parsing covers common formats (YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, month names); ambiguous columns can be fixed in the mapping step. Everything stays on your device - clear your browser data to remove the sample history.</div>
+  </section>
+</main>
+
+<footer class="site-footer"><div class="wrap row row-wrap spread">
+  <span>Financial Report Analyst · Free forever · Works offline after first load</span>
+  <span>Built by <a href="https://github.com/AKASH991833">Akash Vishwakarma</a></span>
+</div></footer>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
