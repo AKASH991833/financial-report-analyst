@@ -1,5 +1,10 @@
 # Financial Report Analyst - Python (pandas + pdfplumber + Streamlit)
 
+> **Live browser demo:** https://akash991833.github.io/financial-report-analyst/ - zero-install version. The app in this folder is the pro-grade rebuild; run steps below.
+> **Repo:** https://github.com/AKASH991833/financial-report-analyst
+
+![financial-report-analyst in action](../screenshots/dash-insights-desktop-dark.png)
+
 The pro-grade version of the browser demo: real bank statement parsing (CSV and PDF), cash-flow analytics and subscription detection.
 
 ## Stack
